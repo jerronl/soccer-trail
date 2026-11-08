@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chess King · Xiangqi & Chess</title>
+<meta name="description" content="Chinese chess (Xiangqi) and chess in one app: set up a board from a photo, get engine analysis, play the computer. 中国象棋和国际象棋：拍照摆棋、引擎分析、人机对弈。">
+<meta property="og:title" content="Chess King · 棋王">
+<meta property="og:description" content="Snap a photo of any board, get engine analysis, play the AI — Xiangqi & chess.">
+<meta property="og:image" content="https://jerronl.github.io/soccer-trail/chess-king/img/feature.jpg">
+<link rel="icon" href="favicon.png">
+<style>
+:root {
+  --red: #a8231f;
+  --red-dark: #7a1915;
+  --red-deep: #45100d;
+  --gold: #e9c27a;
+  --ink: #221a17;
+  --muted: #6a5a52;
+  --line: #eadfd2;
+  --bg: #ffffff;
+  --bg-soft: #f8f1e6;
+  --card: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #f1e9e4;
+    --muted: #bba99f;
+    --line: #3d2c27;
+    --bg: #171110;
+    --bg-soft: #211816;
+    --card: #281d1a;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font: 16px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+html[lang="en"] .zh, html[lang="zh"] .en { display: none !important; }
+a { color: var(--red); }
+@media (prefers-color-scheme: dark) { a { color: #f0a08f; } }
+img { max-width: 100%; height: auto; display: block; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+/* top bar */
+.top {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--red-deep); color: #fff;
+}
+.top .wrap { display: flex; align-items: center; gap: 12px; height: 56px; }
+.top img { width: 32px; height: 32px; border-radius: 8px; }
+.top b { font-size: 17px; }
+.top nav { margin-left: auto; display: flex; gap: 18px; align-items: center; }
+.top nav a { color: #f3d9cf; text-decoration: none; font-size: 15px; }
+.top nav a:hover { color: #fff; }
+.lang {
+  border: 1px solid #c08a7d; background: transparent; color: #fff;
+  border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 14px; cursor: pointer;
+}
+@media (max-width: 640px) { .top nav a:not(.home) { display: none; } }
+
+/* hero */
+.hero {
+  color: #fff;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 1px, transparent 1px 72px), repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 72px),
+    linear-gradient(160deg, var(--red) 0%, var(--red-dark) 70%, var(--red-deep) 100%);
+  padding: 56px 0 64px;
+}
+.hero .wrap { display: grid; grid-template-columns: 1.05fr 1fr; gap: 40px; align-items: center; }
+@media (max-width: 860px) { .hero .wrap { grid-template-columns: 1fr; } }
+.hero h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1.1; margin: 0 0 14px; letter-spacing: -.5px; }
+.hero h1 small { display: block; font-size: .5em; font-weight: 500; opacity: .85; margin-top: 8px; letter-spacing: 0; }
+.hero p.lead { font-size: 19px; margin: 0 0 26px; color: #f7e6df; max-width: 34em; }
+.badge {
+  display: inline-block; background: var(--gold); color: #3b2600;
+  font-weight: 700; font-size: 13px; padding: 3px 10px; border-radius: 999px; margin-bottom: 16px;
+}
+.btns { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn {
+  display: inline-block; text-decoration: none; font-weight: 600;
+  padding: 12px 22px; border-radius: 12px; font-size: 16px;
+}
+.btn.primary { background: var(--gold); color: #3b2600; }
+.btn.ghost { border: 1.5px solid rgba(255,255,255,.6); color: #fff; }
+.btn.red { background: var(--red); color: #fff; }
+.phones { display: flex; gap: 16px; justify-content: center; }
+.phones img { width: 46%; max-width: 250px; border-radius: 18px; box-shadow: 0 18px 50px rgba(0,0,0,.4); border: 3px solid rgba(255,255,255,.18); }
+.phones img:last-child { margin-top: 40px; }
+.facts { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 22px; font-size: 14px; color: #f0d6cb; }
+.facts > span::before { content: "✓ "; color: var(--gold); }
+
+section { padding: 64px 0; }
+section.soft { background: var(--bg-soft); }
+h2 { font-size: clamp(26px, 3.4vw, 34px); margin: 0 0 8px; letter-spacing: -.3px; }
+.sub { color: var(--muted); margin: 0 0 32px; max-width: 46em; }
+
+/* features */
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+@media (max-width: 860px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+.card .ic { font-size: 26px; line-height: 1; margin-bottom: 10px; }
+.card h3 { margin: 0 0 6px; font-size: 17px; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+/* join steps */
+.steps { counter-reset: s; display: grid; gap: 16px; }
+.step {
+  display: grid; grid-template-columns: 44px 1fr; gap: 16px; align-items: start;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px;
+}
+.step::before {
+  counter-increment: s; content: counter(s);
+  width: 44px; height: 44px; border-radius: 50%; background: var(--red); color: #fff;
+  display: grid; place-items: center; font-weight: 700; font-size: 19px;
+}
+.step h3 { margin: 6px 0 6px; font-size: 18px; }
+.step p { margin: 0 0 10px; color: var(--muted); }
+.step p:last-child { margin-bottom: 0; }
+.step .btn { margin-top: 4px; padding: 9px 18px; font-size: 15px; }
+.note {
+  border-left: 4px solid var(--gold); background: var(--card); border-radius: 8px;
+  padding: 14px 18px; margin-top: 20px; color: var(--muted); font-size: 15px;
+}
+.note b { color: var(--ink); }
+
+/* guide */
+.guide { display: grid; gap: 44px; }
+.g { display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; align-items: center; }
+.g:nth-child(even) .gt { order: 2; }
+@media (max-width: 860px) { .g { grid-template-columns: 1fr; } .g:nth-child(even) .gt { order: 0; } }
+.g .num { color: var(--red); font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; }
+.g h3 { font-size: 22px; margin: 4px 0 10px; }
+.g ul { margin: 0; padding-left: 20px; color: var(--muted); }
+.g li { margin: 4px 0; }
+.g li b { color: var(--ink); }
+.g img { width: 100%; max-width: 300px; justify-self: center; border-radius: 16px; border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+.k {
+  display: inline-block; border: 1px solid var(--line); background: var(--bg-soft);
+  border-radius: 6px; padding: 0 6px; font-size: .92em; color: var(--ink); white-space: nowrap;
+}
+
+/* faq */
+details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; }
+summary { cursor: pointer; font-weight: 600; }
+details p { color: var(--muted); margin: 10px 0 0; }
+
+footer { background: var(--red-deep); color: #e3c3b8; padding: 30px 0; font-size: 14px; }
+footer a { color: #fff; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: space-between; }
+.top .wrap b { white-space: nowrap; }
+.step > div { min-width: 0; }
+.step .btn { overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <img src="img/icon.png" alt="">
+    <b><span class="en">Chess King</span><span class="zh">棋王</span></b>
+    <nav>
+      <a class="home" href="../../"><span class="en">← All apps</span><span class="zh">← 全部应用</span></a>
+      <a href="#features"><span class="en">Features</span><span class="zh">功能</span></a>
+      <a href="#join"><span class="en">Get the app</span><span class="zh">下载安装</span></a>
+      <a href="#guide"><span class="en">How to use</span><span class="zh">使用方法</span></a>
+      <a href="#faq">FAQ</a>
+      <button class="lang" id="lang" type="button">中文</button>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div>
+      <span class="badge"><span class="en">Early access · Android</span><span class="zh">尝鲜版 · Android</span></span>
+      <h1><span class="en">Chess King</span><span class="zh">棋王</span><small><span class="en">Xiangqi & Chess · 棋王</span><span class="zh">中国象棋与国际象棋 · Chess King</span></small></h1>
+      <p class="lead">
+        <span class="en">Chinese chess (Xiangqi) and chess in one app. Snap a photo of any board to set up the position, get the best move from a strong engine, or play against the computer.</span>
+        <span class="zh">中国象棋和国际象棋装在一个应用里。对着棋盘拍一张照片就能摆好局面，用强力引擎找出最佳着法，也可以和电脑对弈。</span>
+      </p>
+      <div class="btns">
+        <a class="btn primary" href="#join"><span class="en">Join early access</span><span class="zh">加入尝鲜版</span></a>
+        <a class="btn ghost" href="#guide"><span class="en">How to use</span><span class="zh">使用方法</span></a>
+      </div>
+      <div class="facts">
+        <span><span class="en">Free</span><span class="zh">免费</span></span>
+        <span><span class="en">Engines run offline</span><span class="zh">引擎离线可用</span></span>
+        <span><span class="en">Xiangqi & chess</span><span class="zh">象棋 & 国际象棋</span></span>
+        <span><span class="en">English & 中文</span><span class="zh">中文 & English</span></span>
+      </div>
+    </div>
+    <div class="phones">
+      <img src="img/hint.jpg" alt="Xiangqi game with the engine's best move" width="540" height="960">
+      <img src="img/chess.jpg" alt="Chess game with the engine's best move" width="540" height="960">
+    </div>
+  </div>
+</div>
+
+<section id="features">
+  <div class="wrap">
+    <h2><span class="en">What it does</span><span class="zh">能做什么</span></h2>
+    <p class="sub">
+      <span class="en">Two games, one app. Switch between Xiangqi and chess at any time.</span>
+      <span class="zh">两种棋，一个应用，随时切换中国象棋和国际象棋。</span>
+    </p>
+    <div class="grid">
+      <div class="card"><div class="ic">📷</div>
+        <h3><span class="en">Set up from a photo</span><span class="zh">拍照摆棋</span></h3>
+        <p><span class="en">Photograph a real board, a book diagram or a screen. The app finds the four corners and recognizes every piece.</span><span class="zh">拍实体棋盘、棋书上的棋图或屏幕都行。App 自动找到棋盘四角，认出每一个棋子。</span></p></div>
+      <div class="card"><div class="ic">🧠</div>
+        <h3><span class="en">Strong engines</span><span class="zh">强力引擎</span></h3>
+        <p><span class="en">Pikafish for Xiangqi and Stockfish for chess show the best move and who is ahead.</span><span class="zh">象棋用皮卡鱼（Pikafish），国际象棋用 Stockfish，给出最佳着法和局面评分。</span></p></div>
+      <div class="card"><div class="ic">🤖</div>
+        <h3><span class="en">Play the computer</span><span class="zh">人机对弈</span></h3>
+        <p><span class="en">Easy, Normal or Hard. Take either side, or play a friend on the same phone.</span><span class="zh">简单、普通、困难三档，执哪一方都可以；也能两人在同一台手机上对下。</span></p></div>
+      <div class="card"><div class="ic">✍️</div>
+        <h3><span class="en">Set up any position</span><span class="zh">自由摆棋</span></h3>
+        <p><span class="en">Place pieces by hand to study an endgame or a puzzle. Copy and paste positions as FEN.</span><span class="zh">手动摆出残局或棋题来研究，支持复制、粘贴 FEN。</span></p></div>
+      <div class="card"><div class="ic">✈️</div>
+        <h3><span class="en">Works offline</span><span class="zh">离线可用</span></h3>
+        <p><span class="en">The engines and the on-device recognizer run on your phone, so you can play and analyze without a network.</span><span class="zh">引擎和本地识别都在手机上运行，没有网络也能下棋、分析。</span></p></div>
+      <div class="card"><div class="ic">🏆</div>
+        <h3><span class="en">Report mistakes, earn ad-free days</span><span class="zh">上报识别错误，换免广告</span></h3>
+        <p><span class="en">If a photo is misread, report it in one tap. Valid reports earn points; every 5 points gives one ad-free day.</span><span class="zh">照片认错了，一键上报。有效上报得积分，每 5 分换 1 天免广告。</span></p></div>
+    </div>
+  </div>
+</section>
+
+<section id="join" class="soft">
+  <div class="wrap">
+    <h2><span class="en">Join early access and install</span><span class="zh">加入尝鲜版，下载安装</span></h2>
+    <p class="sub">
+      <span class="en">Chess King is in early access on Google Play. It's free — join the testers' group, then install it from Google Play like any other app. Feedback and suggestions are very welcome!</span>
+      <span class="zh">棋王目前是 Google Play 上的尝鲜版，免费。先加入测试群组，再像普通应用一样从 Google Play 安装。欢迎试用，多提建议！</span>
+    </p>
+
+    <div class="steps">
+      <div class="step"><div>
+        <h3><span class="en">Join the testers' Google Group</span><span class="zh">加入测试者的 Google 群组</span></h3>
+        <p><span class="en">Sign in with the <b>same Google account you use for Google Play on your phone</b>, open the group and click <span class="k">Join group</span>.</span>
+           <span class="zh">请用<b>手机上 Google Play 登录的同一个 Google 账号</b>打开群组，点 <span class="k">加入群组 / Join group</span>。</span></p>
+        <a class="btn red" href="https://groups.google.com/g/chess-king-testers" target="_blank" rel="noopener">groups.google.com/g/chess-king-testers</a>
+      </div></div>
+
+      <div class="step"><div>
+        <h3><span class="en">Become a tester</span><span class="zh">成为测试者</span></h3>
+        <p><span class="en">With the same account, open the test page and tap <span class="k">Become a tester</span>.</span>
+           <span class="zh">还是用这个账号，打开测试页面，点 <span class="k">成为测试者 / Become a tester</span>。</span></p>
+        <a class="btn red" href="https://play.google.com/apps/testing/com.jerron.xiangqi" target="_blank" rel="noopener"><span class="en">Open the test page</span><span class="zh">打开测试页面</span></a>
+      </div></div>
+
+      <div class="step"><div>
+        <h3><span class="en">Install from Google Play</span><span class="zh">从 Google Play 安装</span></h3>
+        <p><span class="en">On the same page tap <span class="k">download it on Google Play</span>, or search Google Play for <b>Chess King: Xiangqi &amp; Chess</b> on your phone, then tap <span class="k">Install</span>.</span>
+           <span class="zh">在同一页点 <span class="k">download it on Google Play</span>，或者在手机的 Google Play 里搜 <b>Chess King: Xiangqi &amp; Chess</b>，点 <span class="k">安装 / Install</span>。</span></p>
+        <a class="btn red" href="https://play.google.com/store/apps/details?id=com.jerron.xiangqi" target="_blank" rel="noopener"><span class="en">Chess King on Google Play</span><span class="zh">在 Google Play 打开</span></a>
+      </div></div>
+
+      <div class="step"><div>
+        <h3><span class="en">Use it, and tell us what you think</span><span class="zh">试用，告诉我们你的想法</span></h3>
+        <p><span class="en">Updates arrive through Google Play automatically. To send feedback, use <span class="k">Send private feedback</span> on the app's Google Play page, open an issue at <a href="https://github.com/jerronl/xiangqi-demo/issues" target="_blank" rel="noopener">GitHub</a>, or email <a href="mailto:jerron@gmail.com">jerron@gmail.com</a>.</span>
+           <span class="zh">以后的更新会通过 Google Play 自动推送。有建议可以在应用的 Google Play 页面里点 <span class="k">向开发者发送私密反馈</span>，在 <a href="https://github.com/jerronl/xiangqi-demo/issues" target="_blank" rel="noopener">GitHub</a> 提 issue，或者发邮件到 <a href="mailto:jerron@gmail.com">jerron@gmail.com</a>。</span></p>
+      </div></div>
+    </div>
+
+    <div class="note">
+      <span class="en"><b>Can't find it, or the page says “not found”?</b> Early-access apps are only visible to signed-in testers. Check that steps 1 and 2 used the same account that's signed in to Google Play on your phone (in Play, tap your profile picture to switch accounts), then wait a few minutes and try again.<br>
+      <b>Requirements:</b> an Android phone with Android 7.0 or newer (64-bit ARM, which covers nearly all phones from the last several years).</span>
+      <span class="zh"><b>搜不到，或者页面显示“找不到”？</b>尝鲜版只对已登录的测试者可见。请确认第 1、2 步用的账号就是手机 Google Play 上登录的账号（在 Play 里点头像可以切换账号），等几分钟再试。<br>
+      <b>手机要求：</b>Android 7.0 或更新版本的安卓手机（64 位 ARM，近几年的手机基本都是）。</span>
+    </div>
+  </div>
+</section>
+
+<section id="guide">
+  <div class="wrap">
+    <h2><span class="en">How to use</span><span class="zh">使用方法</span></h2>
+    <p class="sub">
+      <span class="en">The buttons along the top: ⚙️ settings, 📷 take a photo, 🖼️ pick a photo from the gallery, ✍️ set up a position, ⓘ about and leaderboard.</span>
+      <span class="zh">顶部一排按钮依次是：⚙️ 设置、📷 拍照、🖼️ 从相册选图、✍️ 摆棋、ⓘ 关于和积分榜。</span>
+    </p>
+
+    <div class="guide">
+      <div class="g">
+        <div class="gt">
+          <div class="num"><span class="en">Step 1</span><span class="zh">第 1 步</span></div>
+          <h3><span class="en">Start a game</span><span class="zh">开始对局</span></h3>
+          <ul class="en">
+            <li>The small arrow next to <span class="k">New game</span> switches between <b>Xiangqi</b> and <b>Chess</b>.</li>
+            <li><span class="k">Me: Red</span> picks your side, or choose two players; <span class="k">Normal</span> sets the strength (Easy, Normal, Hard).</li>
+            <li>Tap a piece, then tap where it should go. The computer answers automatically.</li>
+            <li><span class="k">New game</span> starts over.</li>
+          </ul>
+          <ul class="zh">
+            <li><span class="k">新对局</span> 旁边的小箭头可以切换<b>中国象棋</b>和<b>国际象棋</b>。</li>
+            <li><span class="k">我执红</span> 选你执哪一方，也可以选双人对战；<span class="k">普通</span> 调电脑难度（简单、普通、困难）。</li>
+            <li>点一个棋子，再点要走到的位置。电脑会自动应着。</li>
+            <li><span class="k">新对局</span> 重新开始。</li>
+          </ul>
+        </div>
+        <img src="img/xiangqi.jpg" alt="Xiangqi starting position" loading="lazy" width="540" height="960">
+      </div>
+
+      <div class="g">
+        <div class="gt">
+          <div class="num"><span class="en">Step 2</span><span class="zh">第 2 步</span></div>
+          <h3><span class="en">Ask the engine</span><span class="zh">让引擎帮你看</span></h3>
+          <ul class="en">
+            <li>Tap <span class="k">Hint</span>: an orange arrow shows the engine's best move.</li>
+            <li>The line above the board shows the best move and the score — for example <b>Red +0.20</b> means Red is slightly better.</li>
+            <li><span class="k">Undo</span> takes back a move, <span class="k">Swap sides</span> swaps sides with the computer, <span class="k">Flip</span> turns the board around.</li>
+          </ul>
+          <ul class="zh">
+            <li>点 <span class="k">提示</span>，橙色箭头会标出引擎推荐的着法。</li>
+            <li>棋盘上方显示推荐着法和局面评分，比如 <b>红 +0.20</b> 表示红方稍好。</li>
+            <li><span class="k">悔棋</span> 退回一步，<span class="k">换边</span> 和电脑交换执子，<span class="k">翻转</span> 把棋盘倒过来看。</li>
+          </ul>
+        </div>
+        <img src="img/hint.jpg" alt="Engine hint arrow" loading="lazy" width="540" height="960">
+      </div>
+
+      <div class="g">
+        <div class="gt">
+          <div class="num"><span class="en">Step 3</span><span class="zh">第 3 步</span></div>
+          <h3><span class="en">Set up a board from a photo</span><span class="zh">拍照摆棋</span></h3>
+          <ul class="en">
+            <li>Tap 📷 to photograph a board, or 🖼️ to pick a picture from your gallery. Fit the whole board in the frame.</li>
+            <li>The app finds the four corners. If they're a little off, drag the round dots onto the board's corners.</li>
+            <li>Tap <span class="k">Next: Recognize and Set Up</span>. Check the pieces — any square circled in orange is a guess — fix them, then start playing or analyzing.</li>
+            <li>Got it wrong? Tap <span class="k">Wrong? Report</span> to send the photo so recognition gets better.</li>
+          </ul>
+          <ul class="zh">
+            <li>点 📷 拍棋盘，或点 🖼️ 从相册选图。拍的时候让整个棋盘都在框里。</li>
+            <li>App 会自动找到四个角；不太准的话，把圆点拖到棋盘的角上。</li>
+            <li>点 <span class="k">下一步：识别并摆棋</span>。核对一下棋子，橙色圈出的是没把握的位置，改好后就可以开始下或分析。</li>
+            <li>认错了？点 <span class="k">找错了？上报</span> 把照片发上来，帮助改进识别。</li>
+          </ul>
+        </div>
+        <img src="img/photo.jpg" alt="Board corners found in a photo" loading="lazy" width="540" height="960">
+      </div>
+
+      <div class="g">
+        <div class="gt">
+          <div class="num"><span class="en">Step 4</span><span class="zh">第 4 步</span></div>
+          <h3><span class="en">Chess works the same way</span><span class="zh">国际象棋也一样</span></h3>
+          <ul class="en">
+            <li>Switch to <b>Chess</b> and everything above works the same, with Stockfish as the engine.</li>
+            <li>✍️ <b>Set up position</b> lets you place pieces by hand, clear the board, or paste a FEN.</li>
+            <li>ⓘ <b>About</b> shows the leaderboard and your points from reports.</li>
+          </ul>
+          <ul class="zh">
+            <li>切到<b>国际象棋</b>，上面的操作完全一样，引擎换成 Stockfish。</li>
+            <li>✍️ <b>摆棋</b>：手动摆子、清空棋盘，或者粘贴 FEN。</li>
+            <li>ⓘ <b>关于</b>：查看积分榜和你上报得到的积分。</li>
+          </ul>
+        </div>
+        <img src="img/chess.jpg" alt="Chess game" loading="lazy" width="540" height="960">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="soft">
+  <div class="wrap">
+    <h2><span class="en">Questions</span><span class="zh">常见问题</span></h2>
+    <p class="sub"></p>
+    <details>
+      <summary><span class="en">Are my photos uploaded?</span><span class="zh">我拍的照片会上传吗？</span></summary>
+      <p><span class="en">No, not unless you choose to. Recognition runs on your phone. A photo leaves your phone only when you report a mistake (reports are public on GitHub) or if you turn on optional anonymous sharing in About.</span><span class="zh">默认不会。识别在手机上完成。只有你主动上报识别错误（上报会公开在 GitHub 上），或者在“关于”里打开了匿名分享，照片才会离开手机。</span></p>
+    </details>
+    <details>
+      <summary><span class="en">How do reports and points work?</span><span class="zh">上报和积分怎么用？</span></summary>
+      <p><span class="en">Reporting asks you to sign in with GitHub once. Each valid report earns points on the public leaderboard, and every 5 points is turned into one ad-free day automatically.</span><span class="zh">第一次上报时需要用 GitHub 账号登录。每次有效上报都会在公开积分榜上得分，每 5 分自动换 1 天免广告。</span></p>
+    </details>
+    <details>
+      <summary><span class="en">The photo wasn't recognized well.</span><span class="zh">照片认得不准怎么办？</span></summary>
+      <p><span class="en">Shoot from above in even light, with the whole board in the frame and no strong glare. You can always fix pieces by hand in the set-up screen — and reporting the photo helps improve recognition.</span><span class="zh">尽量从正上方、光线均匀的地方拍，整个棋盘都在画面里，避免强反光。摆棋页面里都可以手动改，上报照片也能帮助改进识别。</span></p>
+    </details>
+    <details>
+      <summary><span class="en">Does it have ads?</span><span class="zh">有广告吗？</span></summary>
+      <p><span class="en">Yes, a small number of ads from Google AdMob. Points from reports give ad-free days.</span><span class="zh">有少量 Google AdMob 广告。上报得到的积分可以换免广告天数。</span></p>
+    </details>
+    <details>
+      <summary><span class="en">Is there an iPhone version?</span><span class="zh">有 iPhone 版吗？</span></summary>
+      <p><span class="en">Not yet — Android only for now.</span><span class="zh">暂时没有，目前只有安卓版。</span></p>
+    </details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Chess King · <span class="en">Chess King</span><span class="zh">棋王</span></span>
+    <span><a href="privacy.html"><span class="en">Privacy policy</span><span class="zh">隐私政策</span></a> · <a href="mailto:jerron@gmail.com">jerron@gmail.com</a></span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var root = document.documentElement, btn = document.getElementById('lang');
+  function set(l) {
+    root.lang = l;
+    btn.textContent = l === 'zh' ? 'English' : '中文';
+    document.title = l === 'zh' ? '棋王 · 中国象棋与国际象棋' : 'Chess King · Xiangqi & Chess';
+  }
+  var saved = null;
+  try { saved = localStorage.getItem('lang'); } catch (e) {}
+  var q = new URLSearchParams(location.search).get('lang');
+  set(q === 'zh' || q === 'en' ? q : saved || ((navigator.language || '').toLowerCase().indexOf('zh') === 0 ? 'zh' : 'en'));
+  btn.addEventListener('click', function () {
+    var l = root.lang === 'zh' ? 'en' : 'zh';
+    set(l);
+    try { localStorage.setItem('lang', l); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
