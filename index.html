@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soccer Trail · 球员轨迹</title>
+<meta name="description" content="Tap a player in a match video, follow every run, and export the clip with the trail. 在比赛视频里点一下球员，跟踪他的每一次跑动，导出带轨迹的视频。">
+<meta property="og:title" content="Soccer Trail · 球员轨迹">
+<meta property="og:description" content="Tap a player. Follow every run. Export the clip with the trail.">
+<meta property="og:image" content="https://jerronl.github.io/soccer-trail/img/feature.jpg">
+<link rel="icon" href="favicon.png">
+<style>
+:root {
+  --green: #1f8a43;
+  --green-dark: #136030;
+  --green-deep: #0c3f20;
+  --trail: #ffd23f;
+  --ink: #17221b;
+  --muted: #56645b;
+  --line: #dde5df;
+  --bg: #ffffff;
+  --bg-soft: #f3f7f4;
+  --card: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e8efe9;
+    --muted: #a6b5ab;
+    --line: #2b3a30;
+    --bg: #101713;
+    --bg-soft: #16211a;
+    --card: #1b271f;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font: 16px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+html[lang="en"] .zh, html[lang="zh"] .en { display: none !important; }
+a { color: var(--green); }
+@media (prefers-color-scheme: dark) { a { color: #6fd18f; } }
+img { max-width: 100%; display: block; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+/* top bar */
+.top {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--green-deep); color: #fff;
+}
+.top .wrap { display: flex; align-items: center; gap: 12px; height: 56px; }
+.top img { width: 32px; height: 32px; border-radius: 8px; }
+.top b { font-size: 17px; }
+.top nav { margin-left: auto; display: flex; gap: 18px; align-items: center; }
+.top nav a { color: #d6eadb; text-decoration: none; font-size: 15px; }
+.top nav a:hover { color: #fff; }
+.lang {
+  border: 1px solid #6c9c7b; background: transparent; color: #fff;
+  border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 14px; cursor: pointer;
+}
+@media (max-width: 640px) { .top nav a { display: none; } }
+
+/* hero */
+.hero {
+  color: #fff;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 80px, transparent 80px 160px),
+    linear-gradient(160deg, var(--green) 0%, var(--green-dark) 70%, var(--green-deep) 100%);
+  padding: 56px 0 64px;
+}
+.hero .wrap { display: grid; grid-template-columns: 1.05fr 1fr; gap: 40px; align-items: center; }
+@media (max-width: 860px) { .hero .wrap { grid-template-columns: 1fr; } }
+.hero h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1.1; margin: 0 0 14px; letter-spacing: -.5px; }
+.hero h1 small { display: block; font-size: .5em; font-weight: 500; opacity: .85; margin-top: 8px; letter-spacing: 0; }
+.hero p.lead { font-size: 19px; margin: 0 0 26px; color: #e6f3ea; max-width: 34em; }
+.badge {
+  display: inline-block; background: var(--trail); color: #3b2f00;
+  font-weight: 700; font-size: 13px; padding: 3px 10px; border-radius: 999px; margin-bottom: 16px;
+}
+.btns { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn {
+  display: inline-block; text-decoration: none; font-weight: 600;
+  padding: 12px 22px; border-radius: 12px; font-size: 16px;
+}
+.btn.primary { background: var(--trail); color: #2b2200; }
+.btn.ghost { border: 1.5px solid rgba(255,255,255,.6); color: #fff; }
+.btn.green { background: var(--green); color: #fff; }
+.hero .shot { border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.35); border: 3px solid rgba(255,255,255,.15); }
+.facts { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 22px; font-size: 14px; color: #cfe6d6; }
+.facts span::before { content: "✓ "; color: var(--trail); }
+
+section { padding: 64px 0; }
+section.soft { background: var(--bg-soft); }
+h2 { font-size: clamp(26px, 3.4vw, 34px); margin: 0 0 8px; letter-spacing: -.3px; }
+.sub { color: var(--muted); margin: 0 0 32px; max-width: 46em; }
+
+/* features */
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+@media (max-width: 860px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+.card .ic { font-size: 26px; line-height: 1; margin-bottom: 10px; }
+.card h3 { margin: 0 0 6px; font-size: 17px; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+/* join steps */
+.steps { counter-reset: s; display: grid; gap: 16px; }
+.step {
+  display: grid; grid-template-columns: 44px 1fr; gap: 16px; align-items: start;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px;
+}
+.step::before {
+  counter-increment: s; content: counter(s);
+  width: 44px; height: 44px; border-radius: 50%; background: var(--green); color: #fff;
+  display: grid; place-items: center; font-weight: 700; font-size: 19px;
+}
+.step h3 { margin: 6px 0 6px; font-size: 18px; }
+.step p { margin: 0 0 10px; color: var(--muted); }
+.step p:last-child { margin-bottom: 0; }
+.step .btn { margin-top: 4px; padding: 9px 18px; font-size: 15px; }
+.note {
+  border-left: 4px solid var(--trail); background: var(--card); border-radius: 8px;
+  padding: 14px 18px; margin-top: 20px; color: var(--muted); font-size: 15px;
+}
+.note b { color: var(--ink); }
+
+/* guide */
+.guide { display: grid; gap: 44px; }
+.g { display: grid; grid-template-columns: 1fr 1.15fr; gap: 32px; align-items: center; }
+.g:nth-child(even) .gt { order: 2; }
+@media (max-width: 860px) { .g { grid-template-columns: 1fr; } .g:nth-child(even) .gt { order: 0; } }
+.g .num { color: var(--green); font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; }
+.g h3 { font-size: 22px; margin: 4px 0 10px; }
+.g ul { margin: 0; padding-left: 20px; color: var(--muted); }
+.g li { margin: 4px 0; }
+.g li b { color: var(--ink); }
+.g img { border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+.k {
+  display: inline-block; border: 1px solid var(--line); background: var(--bg-soft);
+  border-radius: 6px; padding: 0 6px; font-size: .92em; color: var(--ink); white-space: nowrap;
+}
+
+/* faq */
+details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; }
+summary { cursor: pointer; font-weight: 600; }
+details p { color: var(--muted); margin: 10px 0 0; }
+
+footer { background: var(--green-deep); color: #bcd6c3; padding: 30px 0; font-size: 14px; }
+footer a { color: #fff; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <img src="img/icon.png" alt="">
+    <b><span class="en">Soccer Trail</span><span class="zh">球员轨迹</span></b>
+    <nav>
+      <a href="#features"><span class="en">Features</span><span class="zh">功能</span></a>
+      <a href="#join"><span class="en">Get the app</span><span class="zh">下载安装</span></a>
+      <a href="#guide"><span class="en">How to use</span><span class="zh">使用方法</span></a>
+      <a href="#faq">FAQ</a>
+      <button class="lang" id="lang" type="button">中文</button>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div>
+      <span class="badge"><span class="en">Early access · Android</span><span class="zh">尝鲜版 · Android</span></span>
+      <h1>Soccer Trail<small>球员轨迹</small></h1>
+      <p class="lead">
+        <span class="en">Tap a player in a match video, follow every run, and export the clip with their running trail drawn on it — ready to share with coaches, teammates and parents.</span>
+        <span class="zh">在比赛或训练视频里点一下球员，App 会一帧一帧地跟住他，把跑动轨迹画在画面上，再导出成视频，方便发给教练、队友和家长。</span>
+      </p>
+      <div class="btns">
+        <a class="btn primary" href="#join"><span class="en">Join early access</span><span class="zh">加入尝鲜版</span></a>
+        <a class="btn ghost" href="#guide"><span class="en">How to use</span><span class="zh">使用方法</span></a>
+      </div>
+      <div class="facts">
+        <span><span class="en">Free</span><span class="zh">免费</span></span>
+        <span><span class="en">Works offline</span><span class="zh">离线可用</span></span>
+        <span><span class="en">Videos never uploaded</span><span class="zh">视频不上传</span></span>
+        <span><span class="en">English & 中文</span><span class="zh">中文 & English</span></span>
+      </div>
+    </div>
+    <img class="shot" src="img/trail.jpg" alt="A tracked player with a yellow running trail" width="1280" height="720">
+  </div>
+</div>
+
+<section id="features">
+  <div class="wrap">
+    <h2><span class="en">What it does</span><span class="zh">能做什么</span></h2>
+    <p class="sub">
+      <span class="en">Everything runs on your phone. Pick a video, pick a player, and Soccer Trail does the tracking.</span>
+      <span class="zh">所有处理都在手机上完成。选视频、选球员，剩下的跟踪交给 App。</span>
+    </p>
+    <div class="grid">
+      <div class="card"><div class="ic">🎯</div>
+        <h3><span class="en">Tap to pick a player</span><span class="zh">点一下选中球员</span></h3>
+        <p><span class="en">Tap near the player's feet; a person detector draws the box around them for you.</span><span class="zh">点球员脚下，人体识别会自动框住他，不用自己画框。</span></p></div>
+      <div class="card"><div class="ic">🏃</div>
+        <h3><span class="en">Automatic tracking</span><span class="zh">自动跟踪</span></h3>
+        <p><span class="en">Follows the player frame by frame, even while the camera pans, and looks for them again if they get lost in a crowd.</span><span class="zh">逐帧跟住球员，镜头移动也不怕；在人堆里跟丢了会自动再找回来。</span></p></div>
+      <div class="card"><div class="ic">〰️</div>
+        <h3><span class="en">Running trail</span><span class="zh">跑动轨迹</span></h3>
+        <p><span class="en">A fading trail behind the player, from a short tail to the whole run.</span><span class="zh">球员身后画出渐隐的轨迹，长度从几秒到整段都可以调。</span></p></div>
+      <div class="card"><div class="ic">🔍</div>
+        <h3><span class="en">Magnifier</span><span class="zh">放大镜</span></h3>
+        <p><span class="en">A picture-in-picture close-up that follows the player; turn it on and off at any moment.</span><span class="zh">画中画放大显示球员，跟着他走；可以在任意时间打开或关闭。</span></p></div>
+      <div class="card"><div class="ic">🎞️</div>
+        <h3><span class="en">Merge videos</span><span class="zh">合并视频</span></h3>
+        <p><span class="en">Join several clips — say both halves of a match — into one video, in the order they were filmed.</span><span class="zh">把几段视频（比如上下半场）按拍摄顺序合成一个，再一起跟踪。</span></p></div>
+      <div class="card"><div class="ic">🎵</div>
+        <h3><span class="en">Export with music</span><span class="zh">导出可加音乐</span></h3>
+        <p><span class="en">Full-resolution export with the trail; add background music and turn the original sound down or off.</span><span class="zh">按原分辨率导出带轨迹的视频；可以加背景音乐，原声可调小或去掉。</span></p></div>
+    </div>
+  </div>
+</section>
+
+<section id="join" class="soft">
+  <div class="wrap">
+    <h2><span class="en">Join early access and install</span><span class="zh">加入尝鲜版，下载安装</span></h2>
+    <p class="sub">
+      <span class="en">Soccer Trail is in early access on Google Play. It's free — join the testers' group, then install it from Google Play like any other app. Feedback and suggestions are very welcome!</span>
+      <span class="zh">球员轨迹目前是 Google Play 上的尝鲜版，免费。先加入测试群组，再像普通应用一样从 Google Play 安装。欢迎试用，多提建议！</span>
+    </p>
+
+    <div class="steps">
+      <div class="step"><div>
+        <h3><span class="en">Join the testers' Google Group</span><span class="zh">加入测试者的 Google 群组</span></h3>
+        <p><span class="en">Sign in with the <b>same Google account you use for Google Play on your phone</b>, open the group and click <span class="k">Join group</span>. Anyone can join.</span>
+           <span class="zh">请用<b>手机上 Google Play 登录的同一个 Google 账号</b>打开群组，点 <span class="k">加入群组 / Join group</span>。任何人都可以加入。</span></p>
+        <a class="btn green" href="https://groups.google.com/g/soccer-trail-testers" target="_blank" rel="noopener">groups.google.com/g/soccer-trail-testers</a>
+      </div></div>
+
+      <div class="step"><div>
+        <h3><span class="en">Become a tester</span><span class="zh">成为测试者</span></h3>
+        <p><span class="en">With the same account, open the test page and tap <span class="k">Become a tester</span>.</span>
+           <span class="zh">还是用这个账号，打开测试页面，点 <span class="k">成为测试者 / Become a tester</span>。</span></p>
+        <a class="btn green" href="https://play.google.com/apps/testing/com.jerron.soccertracker" target="_blank" rel="noopener"><span class="en">Open the test page</span><span class="zh">打开测试页面</span></a>
+      </div></div>
+
+      <div class="step"><div>
+        <h3><span class="en">Install from Google Play</span><span class="zh">从 Google Play 安装</span></h3>
+        <p><span class="en">On the same page tap <span class="k">download it on Google Play</span>, or search Google Play for <b>Soccer Trail</b> on your phone, then tap <span class="k">Install</span>. The listing shows “Early Access”.</span>
+           <span class="zh">在同一页点 <span class="k">download it on Google Play</span>，或者在手机的 Google Play 里搜 <b>Soccer Trail</b>，点 <span class="k">安装 / Install</span>。商店页上会标着 “Early Access（抢先体验）”。</span></p>
+        <a class="btn green" href="https://play.google.com/store/apps/details?id=com.jerron.soccertracker" target="_blank" rel="noopener"><span class="en">Soccer Trail on Google Play</span><span class="zh">在 Google Play 打开</span></a>
+      </div></div>
+
+      <div class="step"><div>
+        <h3><span class="en">Use it, and tell us what you think</span><span class="zh">试用，告诉我们你的想法</span></h3>
+        <p><span class="en">Updates arrive through Google Play automatically. To send feedback, use <span class="k">Send private feedback</span> on the app's Google Play page, or email <a href="mailto:jerron@gmail.com">jerron@gmail.com</a>.</span>
+           <span class="zh">以后的更新会通过 Google Play 自动推送。有建议可以在应用的 Google Play 页面里点 <span class="k">向开发者发送私密反馈</span>，或者发邮件到 <a href="mailto:jerron@gmail.com">jerron@gmail.com</a>。</span></p>
+      </div></div>
+    </div>
+
+    <div class="note">
+      <span class="en"><b>Can't find it, or the page says “not found”?</b> Early-access apps are only visible to signed-in testers. Check that steps 1 and 2 used the same account that's signed in to Google Play on your phone (in Play, tap your profile picture to switch accounts), then wait a few minutes and try again.<br>
+      <b>Requirements:</b> an Android phone with Android 10 or newer (64-bit ARM, which covers nearly all phones from the last several years).</span>
+      <span class="zh"><b>搜不到，或者页面显示“找不到”？</b>尝鲜版只对已登录的测试者可见。请确认第 1、2 步用的账号就是手机 Google Play 上登录的账号（在 Play 里点头像可以切换账号），等几分钟再试。<br>
+      <b>手机要求：</b>Android 10 或更新版本的安卓手机（64 位 ARM，近几年的手机基本都是）。</span>
+    </div>
+  </div>
+</section>
+
+<section id="guide">
+  <div class="wrap">
+    <h2><span class="en">How to use</span><span class="zh">使用方法</span></h2>
+    <p class="sub">
+      <span class="en">Tap the video to show or hide the buttons. Long-press any button to see its name. Pinch to zoom, drag to move around when zoomed.</span>
+      <span class="zh">点一下画面可以显示或隐藏按钮；长按按钮会显示它的名字。双指缩放画面，放大后可以拖动。</span>
+    </p>
+
+    <div class="guide">
+      <div class="g">
+        <div class="gt">
+          <div class="num"><span class="en">Step 1</span><span class="zh">第 1 步</span></div>
+          <h3><span class="en">Open a video</span><span class="zh">打开视频</span></h3>
+          <ul class="en">
+            <li><b>New (pick a video)</b> — choose a match or training video from your gallery. You can also share a video to Soccer Trail from the gallery.</li>
+            <li><b>Merge videos</b> — pick several clips to join first (see step 6).</li>
+            <li><b>Open save file</b> / <b>Continue last edit</b> — carry on where you left off.</li>
+          </ul>
+          <ul class="zh">
+            <li><b>新建（选视频）</b>：从相册里选一个比赛或训练视频；也可以在相册里把视频分享给球员轨迹。</li>
+            <li><b>合并视频</b>：先把几段视频合成一个（见第 6 步）。</li>
+            <li><b>打开存档</b> / <b>继续上次</b>：接着上次的编辑继续做。</li>
+          </ul>
+        </div>
+        <img src="img/start.jpg" alt="Start screen" loading="lazy" width="1280" height="576">
+      </div>
+
+      <div class="g">
+        <div class="gt">
+          <div class="num"><span class="en">Step 2</span><span class="zh">第 2 步</span></div>
+          <h3><span class="en">Pick the player</span><span class="zh">选中球员</span></h3>
+          <ul class="en">
+            <li>Go to a frame where the player is clearly visible, tap <span class="k">👤 Select player</span>, then <b>tap the player's feet</b>. A box appears around them.</li>
+            <li>Drag the box to move it, or the blue dot to resize it; or drag a new box yourself.</li>
+            <li>Tap <span class="k">✓</span> to confirm.</li>
+          </ul>
+          <ul class="zh">
+            <li>拖到球员看得清楚的一帧，点 <span class="k">👤 选人</span>，再<b>点球员的脚下</b>，App 会把他框起来。</li>
+            <li>拖动方框可以移动，拖蓝点可以改大小；也可以自己拉一个框。</li>
+            <li>点 <span class="k">✓</span> 确认。</li>
+          </ul>
+        </div>
+        <img src="img/box.jpg" alt="Selecting a player" loading="lazy" width="1280" height="576">
+      </div>
+
+      <div class="g">
+        <div class="gt">
+          <div class="num"><span class="en">Step 3</span><span class="zh">第 3 步</span></div>
+          <h3><span class="en">Track, and correct when needed</span><span class="zh">跟踪，必要时修正</span></h3>
+          <ul class="en">
+            <li>Press <span class="k">▶</span>: the player is tracked as the video plays and the trail is drawn behind them.</li>
+            <li>If the box drifts to someone else, pause, tap <span class="k">✏️ Correct</span> and put the box back on the player. Each correction is a key point; the frames in between are tracked again automatically.</li>
+            <li>Player left the picture? Tap <span class="k">Player gone</span> (eye icon): the trail stops until you mark them again.</li>
+            <li><span class="k">Undo</span> / <span class="k">Redo</span> go back and forth through your edits.</li>
+          </ul>
+          <ul class="zh">
+            <li>点 <span class="k">▶</span> 播放，App 边播边跟踪，在球员身后画出轨迹。</li>
+            <li>如果方框跑到别人身上，暂停，点 <span class="k">✏️ 修正</span>，把框拖回球员身上。每次修正都是一个关键点，中间的帧会自动重新跟踪。</li>
+            <li>球员跑出画面了？点 <span class="k">球员不在画面</span>（眼睛图标），轨迹会停下，直到你再次标出他。</li>
+            <li><span class="k">撤销</span> / <span class="k">重做</span> 可以来回撤销和恢复你的编辑。</li>
+          </ul>
+        </div>
+        <img src="img/select.jpg" alt="Tracking a player" loading="lazy" width="1280" height="720">
+      </div>
+
+      <div class="g">
+        <div class="gt">
+          <div class="num"><span class="en">Step 4</span><span class="zh">第 4 步</span></div>
+          <h3><span class="en">Trail length and magnifier</span><span class="zh">轨迹长度和放大镜</span></h3>
+          <ul class="en">
+            <li>The <b>trail slider</b> (bottom right) sets how long the trail is, from 1 to 30 seconds; all the way right shows the whole run.</li>
+            <li><span class="k">🔍 Magnifier</span> adds a close-up of the player. Drag it to move, drag its blue dot to resize, and drag the dashed square's dot to change how much it zooms.</li>
+            <li>Both settings apply from the current moment on, so you can change them partway through the clip.</li>
+          </ul>
+          <ul class="zh">
+            <li>右下角的<b>轨迹滑块</b>调轨迹长度，1 到 30 秒；拉到最右边显示整段跑动。</li>
+            <li><span class="k">🔍 放大镜</span> 在画面上放一个球员特写。拖动特写框移动位置，拖它的蓝点改大小，拖虚线方框的蓝点改放大倍数。</li>
+            <li>这两个设置都从当前时间开始生效，所以中途可以改。</li>
+          </ul>
+        </div>
+        <img src="img/magnifier.jpg" alt="Magnifier" loading="lazy" width="1280" height="720">
+      </div>
+
+      <div class="g">
+        <div class="gt">
+          <div class="num"><span class="en">Step 5</span><span class="zh">第 5 步</span></div>
+          <h3><span class="en">Save and export</span><span class="zh">保存和导出</span></h3>
+          <ul class="en">
+            <li><span class="k">💾 Save</span> keeps your work as a save file so you can continue later (long-press for “save as”). Your last edit is also saved automatically.</li>
+            <li><span class="k">⇪ Export video</span> makes a full-resolution video with the trail and magnifier burned in.</li>
+            <li>Before saving you can <b>pick background music</b> (it loops to the end) and set the <b>original sound</b> volume — slide it all the way left to remove it.</li>
+          </ul>
+          <ul class="zh">
+            <li><span class="k">💾 保存</span>：把编辑存成存档文件，以后接着做（长按是“另存为”）。最近一次编辑也会自动保存。</li>
+            <li><span class="k">⇪ 导出视频</span>：按原分辨率生成带轨迹和放大镜的视频。</li>
+            <li>导出前可以<b>选择背景音乐</b>（会循环到视频结束），并调<b>原声音量</b>，拉到最左边就是去掉原声。</li>
+          </ul>
+        </div>
+        <img src="img/export.jpg" alt="Export dialog" loading="lazy" width="1280" height="576">
+      </div>
+
+      <div class="g">
+        <div class="gt">
+          <div class="num"><span class="en">Step 6</span><span class="zh">第 6 步</span></div>
+          <h3><span class="en">Merge several videos</span><span class="zh">合并多个视频</span></h3>
+          <ul class="en">
+            <li>On the start screen tap <b>Merge videos</b> and pick two or more clips.</li>
+            <li>They're put in the order they were filmed; tap a clip to move it up.</li>
+            <li>Tap <span class="k">Merge…</span>, choose where to save, and the merged video opens ready for tracking — handy for a whole match recorded in parts.</li>
+          </ul>
+          <ul class="zh">
+            <li>在首页点<b>合并视频</b>，选两个或更多视频。</li>
+            <li>会按拍摄时间自动排好顺序；点某一段可以把它往上移。</li>
+            <li>点 <span class="k">合并…</span>，选保存位置，合并好的视频会直接打开，可以接着跟踪。整场比赛分几段录的时候很方便。</li>
+          </ul>
+        </div>
+        <img src="img/merge.jpg" alt="Merge order" loading="lazy" width="1280" height="576">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="soft">
+  <div class="wrap">
+    <h2><span class="en">Questions</span><span class="zh">常见问题</span></h2>
+    <p class="sub"></p>
+    <details>
+      <summary><span class="en">Are my videos uploaded anywhere?</span><span class="zh">我的视频会上传吗？</span></summary>
+      <p><span class="en">No. Tracking and export run entirely on your phone. The app only reads the videos and music you pick yourself.</span><span class="zh">不会。跟踪和导出都在手机上完成，App 只读取你自己选的视频和音乐。</span></p>
+    </details>
+    <details>
+      <summary><span class="en">Tracking is slow on my phone.</span><span class="zh">我的手机跟踪很慢。</span></summary>
+      <p><span class="en">Tap the <span class="k">1280</span> button at the bottom left to track at a lower resolution (960 or 640). Export always keeps the original resolution.</span><span class="zh">点左下角的 <span class="k">1280</span>，换成更低的跟踪分辨率（960 或 640）。导出始终是原分辨率。</span></p>
+    </details>
+    <details>
+      <summary><span class="en">What kind of video works best?</span><span class="zh">什么样的视频效果最好？</span></summary>
+      <p><span class="en">Landscape video filmed from the side of the field, steady or slowly panning. Players that are very small or hidden for a long time may need a few corrections.</span><span class="zh">从场边横着拍、画面稳定或缓慢移动的视频。球员太小、或者长时间被挡住时，可能需要多修正几次。</span></p>
+    </details>
+    <details>
+      <summary><span class="en">Does it have ads?</span><span class="zh">有广告吗？</span></summary>
+      <p><span class="en">A banner on the start screen and an occasional ad after an export. There are no ads while you edit.</span><span class="zh">首页有横幅广告，导出后偶尔会有一次广告；编辑时没有广告。</span></p>
+    </details>
+    <details>
+      <summary><span class="en">Is there an iPhone version?</span><span class="zh">有 iPhone 版吗？</span></summary>
+      <p><span class="en">Not yet — Android only for now.</span><span class="zh">暂时没有，目前只有安卓版。</span></p>
+    </details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Soccer Trail · <span class="en">Soccer Trail</span><span class="zh">球员轨迹</span></span>
+    <span><a href="privacy.html"><span class="en">Privacy policy</span><span class="zh">隐私政策</span></a> · <a href="mailto:jerron@gmail.com">jerron@gmail.com</a></span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var root = document.documentElement, btn = document.getElementById('lang');
+  function set(l) {
+    root.lang = l;
+    btn.textContent = l === 'zh' ? 'English' : '中文';
+    document.title = l === 'zh' ? '球员轨迹 · Soccer Trail' : 'Soccer Trail · 球员轨迹';
+  }
+  var saved = null;
+  try { saved = localStorage.getItem('lang'); } catch (e) {}
+  var q = new URLSearchParams(location.search).get('lang');
+  set(q === 'zh' || q === 'en' ? q : saved || ((navigator.language || '').toLowerCase().indexOf('zh') === 0 ? 'zh' : 'en'));
+  btn.addEventListener('click', function () {
+    var l = root.lang === 'zh' ? 'en' : 'zh';
+    set(l);
+    try { localStorage.setItem('lang', l); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
