@@ -43,7 +43,7 @@ body {
 html[lang="en"] .zh, html[lang="zh"] .en { display: none !important; }
 a { color: var(--green); }
 @media (prefers-color-scheme: dark) { a { color: #6fd18f; } }
-img { max-width: 100%; display: block; }
+img { max-width: 100%; height: auto; display: block; }
 .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
 
 /* top bar */
@@ -90,7 +90,7 @@ img { max-width: 100%; display: block; }
 .btn.green { background: var(--green); color: #fff; }
 .hero .shot { border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.35); border: 3px solid rgba(255,255,255,.15); }
 .facts { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 22px; font-size: 14px; color: #cfe6d6; }
-.facts span::before { content: "✓ "; color: var(--trail); }
+.facts > span::before { content: "✓ "; color: var(--trail); }
 
 section { padding: 64px 0; }
 section.soft { background: var(--bg-soft); }
